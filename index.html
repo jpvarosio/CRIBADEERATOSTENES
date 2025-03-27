@@ -11,6 +11,7 @@
             margin: 0;
             padding: 20px;
             background-color: #f4f4f9;
+            overflow: hidden; /* Para manejar los corazones que caen */
         }
         h1 {
             font-size: 24px;
@@ -82,6 +83,22 @@
                 font-size: 18px; /* Tamaño de fuente más pequeño en móviles */
             }
         }
+        .heart {
+            position: absolute;
+            font-size: 24px;
+            color: red;
+            animation: fall linear 5s infinite;
+        }
+        @keyframes fall {
+            0% {
+                transform: translateY(-100vh);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -95,6 +112,8 @@
         let numbers = [];
         const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#e67e22', '#1abc9c', '#d35400', '#8e44ad', '#27ae60'];
         let primeColors = {}; // Almacenar colores asignados a números primos
+        let allPrimesMarked = false;
+        let heartInterval;
 
         function createGrid() {
             const table = document.getElementById('numberTable');
@@ -160,10 +179,46 @@
 
             // Alternar estado de marcado
             numbers[base].dataset.marked = isMarked ? 'false' : 'true';
+
+            checkAllPrimesMarked();
+        }
+
+        function checkAllPrimesMarked() {
+            for (let i = 2; i < gridSize; i++) {
+                if (isPrime(i) && numbers[i].dataset.marked !== 'true') {
+                    return; // Si queda algún primo sin marcar, no hacer nada
+                }
+            }
+            if (!allPrimesMarked) {
+                allPrimesMarked = true;
+                startHeartAnimation();
+            }
+        }
+
+        function startHeartAnimation() {
+            heartInterval = setInterval(() => {
+                const heart = document.createElement('div');
+                heart.classList.add('heart');
+                heart.textContent = '❤️';
+                heart.style.left = `${Math.random() * 100}vw`;
+                heart.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                document.body.appendChild(heart);
+
+                setTimeout(() => {
+                    heart.remove();
+                }, 5000);
+            }, 300);
+        }
+
+        function stopHeartAnimation() {
+            clearInterval(heartInterval);
+            document.querySelectorAll('.heart').forEach(heart => heart.remove());
         }
 
         function resetGrid() {
+            stopHeartAnimation(); // Detener la animación de corazones
             primeColors = {}; // Reiniciar los colores asignados
+            allPrimesMarked = false;
             numbers.forEach(number => {
                 number.classList.remove('crossed-out', 'prime-highlight');
                 number.style.color = 'black';
